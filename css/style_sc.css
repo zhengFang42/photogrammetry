@@ -1,0 +1,167 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+    padding: 0;
+    margin: 0;
+    background-color: black;
+    touch-action: none;
+    touch-action: pan-y;
+}
+
+html {
+  /* 需要隐藏最外层不可见区域以使视差生效 */
+  overflow: hidden;
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    perspective: 10vh;
+    transform-style: preserve-3d;
+    /* 3D的容器要允许overflow才能生效 */
+    overflow-y: auto;
+}
+
+a {
+    text-decoration: none;
+}
+
+    a:link {
+        color: white;
+    }
+
+    /* visited link */
+    a:visited {
+        color: white;
+    }
+
+    /* mouse over link */
+    a:hover {
+        color: hotpink;
+    }
+
+    /* selected link */
+    a:active {
+        color: white;
+    }
+
+.main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.list-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  height: 25vh;
+  overflow: hidden;
+}
+
+.list-item:hover .item-image::before {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.item-image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.item-image::before {
+  position: absolute;
+  content: "";
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: all 0.3s ease;
+  background-color: rgba(0, 0, 0, .4);
+}
+
+.item-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.item-text {
+  font-family: 'Courier New', Courier, monospace;
+  text-align: center;
+  color: #ffffff;
+}
+
+.item-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.item-desc {
+  font-size: 1rem;
+}
+
+
+/* width */
+::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+section.head img{
+    width: 100vw;
+}
+
+section.gallery {
+    border-style:none;
+    border:none;
+    margin: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+    section.gallery img {
+        margin: 0;
+        width: 49%;
+        transition: transform 2s;
+    }
+
+        section.gallery img:hover {
+            transform: scale(1.1);
+        }
+
+section.info{
+    font-size:2vw;
+    width: 100%;
+    margin-bottom: 40px;
+    text-align:center;
+    color: white;
+}
+
+section.info img{
+    width:20%;
+}
+
+#loading-bar {
+    width: 20em;
+    height: 0.5em;
+    border-radius: 0.1em;
+    background-color: black;
+    border: 1px solid grey;
+    display: inline-flex;
+}
+
+#progress {
+    background-color: #f3efef;
+    height: inherit;
+    border-radius: inherit;
+    width: 5%;
+}

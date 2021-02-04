@@ -1,0 +1,95 @@
+body {
+    margin: 0;
+}
+
+canvas {
+    display: block;
+}
+
+#c {
+    width: 100vw;
+    height: 100vh;
+    display: block;
+}
+
+div.copyright {
+    font-family: 'Microsoft YaHei', 'Helvetica';
+    opacity: 0.5;
+    font-size: 1vh;
+    text-align: center;
+    color: grey;
+    position: fixed;
+    width: 100%;
+    bottom: 1%;
+}
+
+button.navi {
+    font-family: 'Microsoft YaHei', 'Helvetica';
+    font-size: 2vh;
+    opacity: 0.5;
+    border-radius: 2px;
+    color: white;
+    border-style: dashed;
+    border-width: 1px;
+    border-color: grey;
+    text-decoration: none;
+    text-align: center;
+    text-decoration: none;
+    position: fixed;
+    height: 7vh;
+    width: 7vh;
+    bottom: 3vh;
+    right: 3vh;
+    background-color: black;
+    transition-duration: 0.4s;
+    cursor: pointer;
+}
+
+button.navi:hover {
+    opacity: 0.8;
+    background-color: #555555;
+    color: white;
+}
+
+
+button.navi:active {
+    outline: none;
+    opacity: 1;
+    background-color: white;
+    border-color: white;
+    color: black;
+}
+
+#loading-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+  
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .loading-overlay-hidden {
+    display: none !important;
+  }
+  
+  #loading-bar {
+    width: 20em;
+    height: 0.5em;
+    border-radius: 0.1em;
+    background-color: black;
+  
+    border: 1px solid grey;
+  
+    display: inline-flex;
+  }
+  
+  #progress {
+    background-color: #f3efef;
+    height: inherit;
+    border-radius: inherit;
+  
+    width: 5%;
+  }

@@ -1,0 +1,188 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>大足石刻</title>
+    <link type="text/css" rel="stylesheet" href="../css/default.css" />
+</head>
+<body>
+    <div id="loading-overlay">
+        <div id="loading-bar">
+            <span id="progress"></span>
+        </div>
+    </div>
+    <canvas id="c"></canvas>
+    <div class="copyright">等高线工作室 Copyright 2020</div>
+    <a href="../index.html"><button class="navi">主页</button></a>
+    <script type="module">
+        import * as THREE from '../js/build/three.module.js';
+        import { OrbitControls } from '../js/examples/jsm/controls/OrbitControls.js';
+        const sceneFilePath = '../json/budda.json';
+
+        var mouseX = 0;
+        var mouseY = 0;
+
+        var distance = 3;
+
+        function main() {
+            const canvas = document.querySelector('#c');
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+
+            document.addEventListener('mousemove', onDocumentMouseMove, true);
+            document.addEventListener('touchmove', onDocumentTouchMove, true);
+
+            // Variables for loading screen.
+            const progressBar = document.querySelector( '#progress' );
+            const loadingOverlay = document.querySelector( '#loading-overlay' );
+            let percentComplete = 1;
+
+            // camera
+            const fov = 50;
+            const aspect = window.innerWidth / window.innerHeight; //resizeable
+            const near = 0.1;
+            const far = 10000;
+            var camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+            camera.position.set(0, 0, 10);
+
+            // controls
+            var controls = new OrbitControls(camera, canvas);
+            controls.minDistance = 8;
+            controls.maxDistance = 20;
+
+            controls.minPolarAngle = Math.PI / 2 - 1;
+            controls.maxPolarAngle = Math.PI / 2 + 1;
+            controls.minAzimuthAngle = - Math.PI / 2 + 0.5;
+            controls.maxAzimuthAngle = Math.PI / 2 - 0.5;
+
+            controls.screenSpacePanning = false;
+            //controls.enablePan = false;
+            controls.enableRotate = false;
+            //controls.enableZoom = false;
+            controls.enableKeys = false;
+            //controls.enabled = false;
+
+            controls.target.set(0, 0.8, 0);
+            controls.update();
+
+            // Set loading screen.
+            const animateBar = (percentComplete) => {
+                progressBar.style.width = percentComplete + '%';
+            }
+
+            function onProgress( xhr ) {
+                if ( xhr.lengthComputable ) {
+                    var percentComplete = xhr.loaded / xhr.total * 100 * 0.8;
+                    console.log( 'model ' + Math.round( percentComplete, 2 ) + '% downloaded' );
+                    animateBar(percentComplete);
+                }
+            }
+
+            function onError() {}
+
+            // Set the loading manager.
+            var manager = new THREE.LoadingManager();
+
+            manager.onStart = () => {
+
+                animateBar();
+
+            };
+
+            manager.onProgress = function( item, loaded, total ) {
+
+                var percentComplete = loaded / total * 100 * 0.2 + 80;
+                animateBar(percentComplete);
+            };
+
+            manager.onLoad = function ( ) {
+
+                loadingOverlay.classList.add( 'loading-overlay-hidden' );
+                
+                controls.enabled = true; 
+                // reset the bar in case we need to use it again
+                percentComplete = 0;
+                progressBar.style.width = 0;
+
+            };
+
+            manager.onError = function ( e ) { 
+                console.error( e );
+                progressBar.style.backgroundColor = 'red';
+            }
+
+            //scene setting
+            const scene = new THREE.Scene();
+
+            scene.background = new THREE.Color('black');
+
+            //light
+            var light = new THREE.PointLight(0xFF9C66, 40, 10, 2);
+            light.position.set(0, 0, distance);
+            scene.add(light);
+
+            // Load object.
+            var loader = new THREE.ObjectLoader(manager);
+            loader.load(sceneFilePath, function (object) {
+                scene.add(object);
+            }, onProgress, onError);
+
+
+
+
+
+            //renderer setting
+            renderer.physicallyCorrectLights = true;
+            renderer.toneMapping = THREE.NoToneMapping;
+            renderer.shadowMap.type = 2; //PCF(SOFT)
+            renderer.shadowMap.enabled = true;
+            renderer.gammaFactor = 2.2;
+            renderer.gammaOutput = true;
+
+            function resizeRendererToDisplaySize(renderer) {
+                const canvas = renderer.domElement;
+                const width = canvas.clientWidth;
+                const height = canvas.clientHeight;
+                const needResize = canvas.width !== width || canvas.height !== height;
+                if (needResize) {
+                    renderer.setSize(width, height, false);
+                }
+                return needResize;
+            }
+
+            function onDocumentMouseMove(event) {
+                mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+                mouseY = - (event.clientY / window.innerHeight) * 2 + 1;
+                //scene.background = new THREE.Color('white');
+            }
+
+            function onDocumentTouchMove(event) {
+                mouseX = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+                mouseY = - (event.touches[0].clientY / window.innerHeight) * 2 + 1;
+                //scene.background = new THREE.Color('white');
+            }
+
+            function render() {
+
+                var amp = 5;
+                light.position.set(amp * mouseX, amp * mouseY, distance);
+
+
+                if (resizeRendererToDisplaySize(renderer)) {
+                    const canvas = renderer.domElement;
+                    camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                    camera.updateProjectionMatrix();
+                }
+
+                renderer.render(scene, camera);
+
+                requestAnimationFrame(render);
+            }
+
+            requestAnimationFrame(render);
+        }
+
+        main();
+
+    </script>
+</body>
+</html>

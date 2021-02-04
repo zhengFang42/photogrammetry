@@ -1,0 +1,211 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>人造美人 / 方政 2020</title>
+		<meta charset="utf-8">
+		<link type="text/css" rel="stylesheet" href="../css/video.css">
+	</head>
+	<body>
+		<div class="copyright">等高线工作室 Copyright 2020</div>
+		<a href="../index.html"><button class="navi">主页</button></a>
+		<div id="overlay">
+			<button id="startButton">播放<br><br>PLAY</button>
+		</div>
+		<div id="container"></div>
+		<div id="info">
+		</div>
+
+		<video id="video" loop crossOrigin="anonymous" playsinline style="display:none">
+			<source src="../video/video.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'>
+		</video>
+
+		<script type="module">
+
+			import * as THREE from '../js/build/three.module.js';
+
+			import { OrbitControls } from '../js/examples/jsm/controls/OrbitControls.js';
+			import { Water } from '../js/examples/jsm/objects/Water.js';
+			import { Sky } from '../js/examples/jsm/objects/Sky.js';
+
+			const waterNormalPath = '../js/examples/textures/waternormals.jpg';
+
+			var container;
+			var camera, scene, renderer, light;
+			var controls, water, sphere;
+
+			var startButton = document.getElementById('startButton');
+			startButton.addEventListener('click', function () {
+
+				init();
+				animate();
+
+			}, false);
+
+			function init() {
+
+				var overlay = document.getElementById('overlay');
+				overlay.remove();
+
+				container = document.getElementById('container');
+
+				//
+
+				renderer = new THREE.WebGLRenderer({ antialias: true });
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				container.appendChild(renderer.domElement);
+
+				//
+
+				scene = new THREE.Scene();
+
+				//
+
+				camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 1, 20000);
+				camera.position.set(30, 30, 100);
+
+				//
+
+				light = new THREE.DirectionalLight(0xffffff, 0.8);
+				//scene.add(light);
+
+				//video
+				var video = document.getElementById('video');
+				video.play();
+				video.addEventListener('play', function () {
+					this.currentTime = 3;
+				}, false);
+
+				var videoTexture = new THREE.VideoTexture(video);
+
+				// Water
+
+				var waterGeometry = new THREE.PlaneBufferGeometry(10000, 10000);
+
+				water = new Water(
+					waterGeometry,
+					{
+						textureWidth: 512,
+						textureHeight: 512,
+						waterNormals: new THREE.TextureLoader().load(waterNormalPath, function (texture) {
+
+							texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+
+						}),
+						alpha: 1.0,
+						sunDirection: light.position.clone().normalize(),
+						sunColor: 0xffffff,
+						waterColor: 0x001e0f,
+						distortionScale: 3.7,
+						fog: scene.fog !== undefined
+					}
+				);
+
+				water.rotation.x = - Math.PI / 2;
+
+				scene.add(water);
+
+				// Skybox
+
+				var sky = new Sky();
+
+				var uniforms = sky.material.uniforms;
+
+				uniforms['turbidity'].value = 0.5;
+				uniforms['rayleigh'].value = 3;
+				uniforms['luminance'].value = 1;
+				uniforms['mieCoefficient'].value = 0.1;
+				uniforms['mieDirectionalG'].value = 0.8;
+
+				var parameters = {
+					distance: 400,
+					inclination: 0.49,
+					azimuth: 0.205
+				};
+
+				var cubeCamera = new THREE.CubeCamera(0.1, 1, 512);
+				cubeCamera.renderTarget.texture.generateMipmaps = true;
+				cubeCamera.renderTarget.texture.minFilter = THREE.LinearMipmapLinearFilter;
+
+				scene.background = cubeCamera.renderTarget;
+
+				function updateSun() {
+
+					var theta = Math.PI * (parameters.inclination - 0.5);
+					var phi = 2 * Math.PI * (parameters.azimuth - 0.5);
+
+					light.position.x = parameters.distance * Math.cos(phi);
+					light.position.y = parameters.distance * Math.sin(phi) * Math.sin(theta);
+					light.position.z = parameters.distance * Math.sin(phi) * Math.cos(theta);
+
+					sky.material.uniforms['sunPosition'].value = light.position.copy(light.position);
+					water.material.uniforms['sunDirection'].value.copy(light.position).normalize();
+
+					cubeCamera.update(renderer, sky);
+
+				}
+
+				updateSun();
+
+				//video geometry
+				var planeGeo = new THREE.PlaneBufferGeometry(50, 50, 1);
+				var planeMat = new THREE.MeshStandardMaterial({
+					roughness: 0,
+					matelness: 0,
+					color: 0xffffff,
+					//map: videoTexture,
+					emissive: 0xC1C1C1,
+					emissiveMap: videoTexture,
+					//transparent: true,
+					//opacity: 0.9,
+					side: 2
+				});
+
+				var planeMesh = new THREE.Mesh(planeGeo, planeMat);
+				planeMesh.position.y = 25;
+
+				scene.add(planeMesh);
+
+				controls = new OrbitControls(camera, renderer.domElement);
+				controls.maxPolarAngle = Math.PI * 0.495;
+				controls.target.set(0, 10, 0);
+				controls.minDistance = 40.0;
+				controls.maxDistance = 200.0;
+				controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+				controls.dampingFactor = 0.05;
+
+				controls.screenSpacePanning = true;
+				controls.update();
+
+				window.addEventListener('resize', onWindowResize, false);
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize(window.innerWidth, window.innerHeight);
+
+			}
+
+			function animate() {
+				requestAnimationFrame(animate);
+				render();
+			}
+
+			function render() {
+
+				var time = performance.now() * 0.001;
+
+				water.material.uniforms['time'].value += 1.0 / 60.0;
+
+				renderer.render(scene, camera);
+
+				controls.update();
+			}
+
+		</script>
+	</body>
+</html>

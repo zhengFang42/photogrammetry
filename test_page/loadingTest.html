@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Embroidered tangka of the dharmapala Yama</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="../css/default.css" />
+</head>
+<body>
+    <div class="copyright">等高线工作室 Copyright 2020</div>
+    <a href="../index.html"><button class="navi">主页</button></a>
+    <canvas id="c"></canvas>
+    <script type="module">
+        import * as THREE from '../js/build/three.module.js';
+        import { OrbitControls } from '../js/examples/jsm/controls/OrbitControls.js';
+        import { ImprovedNoise } from '../js/examples/jsm/math/ImprovedNoise.js';
+        const sceneFilePath = '../json/tangka_dark.json';
+
+        var manager;
+
+        function main() {
+
+            manager = new THREE.LoadingManager();
+
+            var loader = new THREE.ObjectLoader(manager);
+            loader.load(sceneFilePath, function (object) {
+                scene.add(object);
+            });
+
+            const canvas = document.querySelector('#c');
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+
+            //camera
+            const fov = 50;
+            const aspect = window.innerWidth / window.innerHeight; //resizeable
+            const near = 0.1;
+            const far = 10000;
+            var camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+            camera.position.set(0, 1, 18);
+
+
+            //controls
+            var controls = new OrbitControls(camera, canvas);
+            controls.target.set(0, -1, 0);
+
+            controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+            controls.dampingFactor = 0.05;
+
+            controls.screenSpacePanning = true;
+
+            controls.minDistance = 3;
+            controls.maxDistance = 30;
+
+            controls.minPolarAngle = 0.1;
+            controls.maxPolarAngle = Math.PI - 0.1;
+            controls.minAzimuthAngle = - Math.PI / 2 + 0.5;
+            controls.maxAzimuthAngle = Math.PI / 2 - 0.5;
+
+            //scene setting
+            const scene = new THREE.Scene();
+
+            scene.background = new THREE.Color('black');
+            //scene.fog = new THREE.Fog(0xFFFFFF, 0, 100);
+
+
+            manager.onStart = function (url, itemsLoaded, itemsTotal) {
+
+                console.log('Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
+
+            };
+
+            manager.onLoad = function () {
+
+                console.log('Loading complete!');
+
+            };
+
+
+            manager.onProgress = function (url, itemsLoaded, itemsTotal) {
+
+                //console.log('Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
+                console.log(itemsLoaded / itemsTotal);
+
+            };
+
+            manager.onError = function (url) {
+
+                console.log('There was an error loading ' + url);
+
+            };
+
+
+
+
+
+            //PointLight( color : Integer, intensity : Float, distance : Number, decay : Float )
+            var leftLight = new THREE.PointLight(0xFFBE4D, 20, 9.6, 1);
+            leftLight.position.set(-2.1, -2.4, 1.8);
+            leftLight.castShadow = true;
+            leftLight.shadow.radius = 4;
+            scene.add(leftLight);
+
+            var rightLight = new THREE.PointLight(0xFFBE4D, 20, 10.1, 1);
+            rightLight.position.set(1.9, -2.1, 2.1);
+            rightLight.castShadow = true;
+            rightLight.shadow.radius = 4;
+            scene.add(rightLight);
+
+            //renderer setting
+            renderer.physicallyCorrectLights = true;
+            renderer.toneMapping = THREE.NoToneMapping;
+            renderer.shadowMap.type = 2; //PCF(SOFT)
+            renderer.shadowMap.enabled = true;
+            renderer.gammaFactor = 2.2;
+            renderer.gammaOutput = true;
+
+            //noise
+            var clock = new THREE.Clock();
+            const perlin = new ImprovedNoise();
+            const scale = 0.2;
+            const frequency = 0.5;
+
+
+            function resizeRendererToDisplaySize(renderer) {
+                const canvas = renderer.domElement;
+                const width = canvas.clientWidth;
+                const height = canvas.clientHeight;
+                const needResize = canvas.width !== width || canvas.height !== height;
+                if (needResize) {
+                    renderer.setSize(width, height, false);
+                }
+                return needResize;
+            }
+
+            function render() {
+
+                var changeTime = frequency * clock.getElapsedTime();
+
+                var pL = scale * perlin.noise(changeTime, 42, 24);
+                var pR = scale * perlin.noise(12, 56, 100 + changeTime);
+                var pB = scale * perlin.noise(55, changeTime, 1);
+
+
+                leftLight.position.set(-2.1 + pL, -2.4 + 0.5 * (pL + pR), 1.8 + pB);
+                rightLight.position.set(1.9 + 0.5 * (pL - pB), -2.1 + pR, 2.1 + pR);
+
+                leftLight.intensity = 15 + 50 * pL;
+                rightLight.intensity = 15 + 50 * pR;
+
+
+                //console.log(pn);
+                //console.log(clock.getElapsedTime());
+                //console.log(perlin.noise(frequency * clock.getElapsedTime(), 1000, 1.2));
+
+
+                if (resizeRendererToDisplaySize(renderer)) {
+                    const canvas = renderer.domElement;
+                    camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                    camera.updateProjectionMatrix();
+                }
+
+                renderer.render(scene, camera);
+
+                requestAnimationFrame(render);
+
+                //for the smooth movement
+                controls.update();
+            }
+
+            requestAnimationFrame(render);
+        }
+
+        main();
+
+    </script>
+</body>
+</html>
