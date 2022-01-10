@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title></title>
@@ -32,18 +32,19 @@
             const near = 0.1;
             const far = 10000;
             var camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-            camera.position.set(0, 0, 3);
+            camera.position.set(0, 0, 2.5);
 
 
             //controls
             var controls = new OrbitControls(camera, canvas);
 
+            controls.enablePan = false;
             controls.enableDamping = false; // an animation loop is required when either damping or auto-rotation are enabled
             controls.dampingFactor = 0.05;
 
             controls.screenSpacePanning = false;
 
-            controls.minDistance = 3;
+            controls.minDistance = 2;
             controls.maxDistance = 3;
 
             controls.minPolarAngle =  Math.PI / 4;
